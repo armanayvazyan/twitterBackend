@@ -10,8 +10,11 @@ app.use(bp.json());
 app.use(bp.urlencoded({extended:true}))
 app.set('port', 3000);
 
-mongoose.connect('mongodb://127.0.0.1:27017/twitter', () => {
-    console.log('Connected to DB Successfully')
+mongoose.connect('mongodb://127.0.0.1:27017/twitter', (err) => {
+    if(err)
+        throw new Error('Connection to DB Failed');
+    else
+        console.log('Connected to DB Successfully');
 });
 
 app.use('/users', users);
