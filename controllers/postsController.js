@@ -1,48 +1,29 @@
 const Post = require("../models/postsModel");
-const User = require("../models/userModel");
-const jwt = require('jsonwebtoken');
+const Response = require("../schemas/baseResponse");
 
 const createPost = async (req, res) => {
-    const user = await jwt.verify(req.header('token'), 'secret', function (err, payload) {
-        if (err) {
-            res.status(401).send('Invalid Token')
-        }
-        if (!payload || !payload.username) {
-            res.status(401).send('Invalid Token')
-        }
-        return User.findOne({username: payload.username});
-    });
-    if (!user) return;
-    console.log(user)
 
+    const user = res.locals.user;
     const post = new Post({
         title: req.body.title,
         description: req.body.description,
         userId: user._id
     })
-    post.save((err) => {
+    await post.save((err) => {
         if (err)
             return res.send(err);
         else
-            return res.status(201).send({
-                status: "success",
-                message: "Post created successfully",
-                post: post
-            });
+            return res.status(201).send(new Response(
+                undefined,
+                "Post created successfully",
+                post
+            ))
     })
 };
 
 const getUserPosts = async (req, res) => {
-    const user = await jwt.verify(req.header('token'), 'secret', function (err, payload) {
-        if (err) {
-            res.status(401).send('Invalid Token')
-        }
-        if (!payload || !payload.username) {
-            res.status(401).send('Invalid Token')
-        }
-        return User.findOne({username: payload.username});
-    });
-    if (!user) return;
+    const user = res.locals.user;
+
     const userPosts = await Post.find({userId: String(user._id)});
 
     return res.send({
@@ -52,15 +33,8 @@ const getUserPosts = async (req, res) => {
 }
 
 const getPostById = async (req, res) => {
-    const user = await jwt.verify(req.header('token'), 'secret', function (err, payload) {
-        if (err) {
-            res.status(401).send('Invalid Token')
-        }
-        if (!payload || !payload.username) {
-            res.status(401).send('Invalid Token')
-        }
-        return User.findOne({username: payload.username});
-    });
+    const user = res.locals.user;
+
     if (!user) return;
     const post = await Post.findById(req.params.id);
 
@@ -75,16 +49,7 @@ const getPostById = async (req, res) => {
 };
 
 const deletePostById = async (req, res) => {
-    const user = await jwt.verify(req.header('token'), 'secret', function (err, payload) {
-        if (err) {
-            res.status(401).send('Invalid Token')
-        }
-        if (!payload || !payload.username) {
-            res.status(401).send('Invalid Token')
-        }
-        return User.findOne({username: payload.username});
-    });
-    if (!user) return;
+    const user = res.locals.user;
 
     const post = await Post.findOneAndDelete({_id: req.params.id});
     if (post == null || String(post.userId) !== String(user._id)) {
@@ -96,16 +61,8 @@ const deletePostById = async (req, res) => {
 };
 
 const updatePostById = async (req, res) => {
-    const user = await jwt.verify(req.header('token'), 'secret', function (err, payload) {
-        if (err) {
-            res.status(401).send('Invalid Token')
-        }
-        if (!payload || !payload.username) {
-            res.status(401).send('Invalid Token')
-        }
-        return User.findOne({username: payload.username});
-    });
-    if (!user) return;
+    const user = res.locals.user;
+
     const updatedPost = {
         title : req.body.title,
         description : req.body.description
